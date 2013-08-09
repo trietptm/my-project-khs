@@ -3,7 +3,7 @@ import urllib2
 import re
 import string
 
-PAGE_COUNT 24
+PAGE_COUNT = 24
 
 
 class CL4D2MapDown:
