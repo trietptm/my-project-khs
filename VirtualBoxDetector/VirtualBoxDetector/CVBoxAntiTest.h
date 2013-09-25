@@ -5,7 +5,6 @@
 #include <Windows.h>
 
 #define VIRTUAL_DRIVER_NAME	"VBOX"
-//#define VIRTUAL_DRIVER_NAME "APPLE SSD SM0128F"
 #define IDT_ADDRESS_LIMIT	0x0d000000
 
 
@@ -26,6 +25,7 @@ public:
 	bool CheckTss();
 	bool QueryRegedit();
 	bool CheckNICMacInfo();
+	bool CheckRegSMBios();
 
 
 	bool TestCase1();	// # 서명된 드라이버 문자열 탐지
@@ -35,6 +35,7 @@ public:
 	bool TestCase5();	// # Tss의 값의 차이를 비교 탐지
 	bool TestCase6();	// # 등록된 레지스터의 VBOX 문자열 비교 탐지
 	bool TestCase7();	// # NIC의 Mac Address 범위를 비교 탐지
+	bool TestCase8();	// # Reg에 등록된 SMBios의 Type을 비교 탐지 
 };
 
 #endif 

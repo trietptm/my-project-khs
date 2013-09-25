@@ -62,4 +62,39 @@ typedef struct _IDSECTOR
 
 /*************** End = GetFirstPhysicalDriveModelNames ***************/
 
+
+/*************** Start = CheckRegSMBios ***************/
+#define TYPE_BIOS 0x0    //e.g. Bios Brand and Version
+#define TYPE_SYSTEM 0x1  //System Manufacturer and Model
+#define TYPE_BASEBOARD 0x2
+#define TYPE_SYSTEM_ENCLOSURE 0x3
+#define TYPE_PROCESSOR 0x4
+#define TYPE_CACHE_INFO 0x7
+#define TYPE_SYSTEM_SLOTS 0x9
+#define TYPE_OEM_STRINGS 0xB
+#define TYPE_PHYSICAL_MEM_ARRAY 0x10
+#define TYPE_MEMORY_DEVICE    0x11
+#define TYPE_MEMORY_ARRAY_MAPPED_ADDRESS 0x13
+#define TYPE_SYSTEM_BOOT_INFORMATION 0x20
+#define TYPE_INACTIVE 0x7E //???? this one
+#define TYPE_END_OF_STRUCTURE 0x7F
+
+struct BIOS_DATA_HEAD
+{
+        unsigned char a1;
+        unsigned char a2;
+        unsigned char a3;
+        unsigned char a4;
+        unsigned long length;
+};
+ 
+struct HeadER
+{
+        unsigned char Type;  //0 for bios, 1 for system, and so on.
+        unsigned char section_length;
+        unsigned short handles;
+};
+
+/*************** End = CheckRegSMBios ***************/
+
 #endif

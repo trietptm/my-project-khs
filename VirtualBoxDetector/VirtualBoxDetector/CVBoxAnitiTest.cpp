@@ -325,6 +325,72 @@ bool CVboxAnti::CheckNICMacInfo()
 	return bResult;
 }
 
+bool CVboxAnti::CheckRegSMBios()
+{
+	bool bResult = false;
+    HKEY hk=0;
+    int ret=RegOpenKeyExA(HKEY_LOCAL_MACHINE,"SYSTEM\\CurrentControlSet\\Services\\mssmbios\\data",0,KEY_ALL_ACCESS,&hk);
+
+    if(ret==ERROR_SUCCESS)
+    {
+            unsigned long type=0;
+            unsigned long length=0;
+            ret=RegQueryValueExA(hk,"SMBiosData",0,&type,0,&length);
+            if(ret==ERROR_SUCCESS)
+            {
+                    if(length)
+                    {
+                            char* p=(char*)LocalAlloc(LMEM_ZEROINIT,length);
+                            if(p)
+                            {
+                                    ret=RegQueryValueExA(hk,"SMBiosData",0,&type,(unsigned char*)p,&length);
+                                    if(ret==ERROR_SUCCESS)
+                                    {
+                                            //--------------------------Only when parsing SMBiosData retrieved from Registry------------------
+                                            unsigned long new_length=((BIOS_DATA_HEAD*)p)->length;  //length-8
+                                            p+=0x8;
+                                            //printf("Length is: %X\r\n",new_length);
+                                            //------------------------------------------------------------------------------------------------
+                                            unsigned long i=0;
+                                            while(i<new_length)
+                                            {
+                                                    unsigned char type=((HeadER*)(p+i))->Type;
+                                                    //PrintType(type);
+                                                    unsigned char section_size=((HeadER*)(p+i))->section_length;
+                                                    //printf("Section length is: %X\r\n",section_size);
+                                                    unsigned short handles=((HeadER*)(p+i))->handles;
+                                                    //printf("Handle is: %X\r\n",handles);
+ 
+                                                    if(type==0x7F) break; //End-Of-Table
+ 
+                                                    if(type==TYPE_INACTIVE) //0x7E
+                                                    {
+                                                        //PrintString(p+i+section_size,*(p+i+4));   //print Brand
+                                                        //PrintString(p+i+section_size,*(p+i+5));   //print Version
+                                                            //MessageBoxA(0,"VirtualBox detected","waliedassar",0);
+														bResult = true;
+														return bResult;
+                                                    }
+                                                    //---Get End of Structure--------------
+                                                    unsigned char* pxp=(unsigned char*)p+i+section_size;
+                                                    while(*(unsigned short*)pxp!=0) pxp++;
+                                                    pxp++;
+                                                    pxp++;
+                                                    //-------------------------------------
+                                                    i=(pxp-((unsigned char*)p));
+                                            }
+                                    }
+                                    LocalFree(p);
+                            }
+                    }
+            }
+            RegCloseKey(hk);
+    }
+    
+
+	return bResult;
+}
+
 bool CVboxAnti::TestCase1()
 {
 	bool bResult;
@@ -457,6 +523,26 @@ bool CVboxAnti::TestCase7()
 	else
 	{
 		printf("[*] TestCase7 - Detect VirtualBox - NICMacInfo =  [ NO ]\n");
+		bResult = false;
+	}
+
+	return bResult;
+}
+
+bool CVboxAnti::TestCase8()
+{
+	bool bResult;
+
+	bResult = CheckRegSMBios();
+
+	if(bResult)
+	{
+		printf("[*] TestCase8 - Detect VirtualBox - RegSMBiosType =  [ YES ]\n");
+		bResult = true;
+	}
+	else
+	{
+		printf("[*] TestCase8 - Detect VirtualBox - RegSMBiosType =  [ NO ]\n");
 		bResult = false;
 	}
 
