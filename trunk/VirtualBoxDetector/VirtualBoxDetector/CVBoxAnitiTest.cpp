@@ -7,6 +7,35 @@
 #include <stdio.h>
 
 
+/********** Start = Utils Func **********/
+
+void CVboxAnti::AllToUpper(unsigned char* str,unsigned long len)
+{
+        for(unsigned long c=0;c<len;c++)
+        {
+                if(str[c]>='a' && str[c]<='z')
+                {
+                        str[c]-=32;
+                }
+        }
+}
+
+unsigned char* CVboxAnti::ScanDataForString(unsigned char* data,unsigned long data_length,unsigned char* string2)
+{
+        unsigned long string_length=(unsigned long)strlen((char*)string2);
+        for(unsigned long i=0;i<=(data_length-string_length);i++)
+        {
+                if(strncmp((char*)(&data[i]),(char*)string2,string_length)==0) return &data[i];
+        }
+        return 0;
+}
+/********** End = Utils Func **********/
+
+
+
+
+/********** Start = VirtualCheck Func **********/
+
 // Code was originally written by Lynn McGuire
 // http://www.winsim.com/diskid32/winio/diskid32.cpp
 
@@ -277,8 +306,6 @@ bool CVboxAnti::QueryRegedit()
 	return bResult;
 }
 
-
-
 #pragma comment(lib,"IPHLPAPI.lib")
 #pragma comment(lib,"ws2_32.lib")
 
@@ -390,6 +417,110 @@ bool CVboxAnti::CheckRegSMBios()
 
 	return bResult;
 }
+
+#include <comdef.h>
+#include <Wbemidl.h>
+
+#pragma comment(lib, "wbemuuid.lib")
+
+bool CVboxAnti::CheckBiosWMI()
+{
+	
+    BSTR rootwmi=SysAllocString(L"root\\wmi");
+    BSTR tables=SysAllocString(L"MSSmBios_RawSMBiosTables");
+	BSTR biosdata=SysAllocString(L"SMBiosData");
+ 
+    HRESULT hr=CoInitializeEx(0, COINIT_MULTITHREADED);
+    if(!SUCCEEDED(hr)) return false;
+    IWbemLocator* pLoc=0;
+    hr=CoCreateInstance(CLSID_WbemLocator,0,CLSCTX_INPROC_SERVER,IID_IWbemLocator,(void**)&pLoc);
+    if(!SUCCEEDED(hr))
+    {
+		CoUninitialize();
+		return false;
+    }
+
+    IWbemServices* pSvc=0;
+    hr=pLoc->ConnectServer(rootwmi,0 ,0 ,0 ,0,0,0,&pSvc);
+
+    if(!SUCCEEDED(hr))
+	{
+            pLoc->Release();    
+			CoUninitialize();
+			return false;
+	}
+
+	hr=CoSetProxyBlanket(pSvc,RPC_C_AUTHN_WINNT,RPC_C_AUTHZ_NONE,0,RPC_C_AUTHN_LEVEL_CALL,RPC_C_IMP_LEVEL_IMPERSONATE,0,EOAC_NONE);
+    if(!SUCCEEDED(hr))
+    {
+		
+        pSvc->Release();
+		pLoc->Release();    
+		CoUninitialize();
+		return false;
+    }
+ 
+	IEnumWbemClassObject* pEnum=0;	
+	hr=pSvc->CreateInstanceEnum(tables,0,0, &pEnum);
+    
+	if(!SUCCEEDED(hr))
+    {
+        pSvc->Release();
+		pLoc->Release();    
+		CoUninitialize();
+		return false;
+    }
+ 
+    IWbemClassObject* pInstance=0;
+    unsigned long Count=0;
+    hr=pEnum->Next(WBEM_INFINITE,1,&pInstance,&Count);
+        
+	if(SUCCEEDED(hr))
+    {              
+			VARIANT BiosData;
+			VariantInit(&BiosData);
+			CIMTYPE type;
+			hr=pInstance->Get(biosdata,0,&BiosData,&type,NULL);
+			if(SUCCEEDED(hr))
+			{
+				SAFEARRAY* p_array = NULL;
+				p_array = V_ARRAY(&BiosData);
+				unsigned char* p_data=(unsigned char *)p_array->pvData;
+				unsigned long length=p_array->rgsabound[0].cElements;
+				AllToUpper(p_data,length);
+				unsigned char* x1=ScanDataForString((unsigned char*)p_data,length,(unsigned char*)"INNOTEK GMBH");
+				unsigned char* x2=ScanDataForString((unsigned char*)p_data,length,(unsigned char*)"VIRTUALBOX");
+				unsigned char* x3=ScanDataForString((unsigned char*)p_data,length,(unsigned char*)"SUN MICROSYSTEMS");
+				unsigned char* x4=ScanDataForString((unsigned char*)p_data,length,(unsigned char*)"VIRTUAL MACHINE");
+				unsigned char* x5=ScanDataForString((unsigned char*)p_data,length,(unsigned char*)"VBOXVER");
+				
+				if(x1 || x2 || x3 || x4 || x5)
+				{
+					return true;
+					//printf("VirtualBox detected\r\n");
+					//printf("Some Strings found:\r\n");
+					if(x1) printf("%s\r\n",x1);
+					if(x2) printf("%s\r\n",x2);
+					if(x3) printf("%s\r\n",x3);
+					if(x4) printf("%s\r\n",x4);
+					if(x5) printf("%s\r\n",x5);
+				}
+			}
+			VariantClear(&BiosData);
+			pInstance->Release();
+        }
+    pSvc->Release();
+    pLoc->Release();    
+    CoUninitialize();
+
+	return false;
+}
+
+/********** End = VirtualCheck Func **********/
+
+
+
+/********** Start = Virtual TestCase Func **********/
 
 bool CVboxAnti::TestCase1()
 {
@@ -548,3 +679,24 @@ bool CVboxAnti::TestCase8()
 
 	return bResult;
 }
+
+bool CVboxAnti::TestCase9()
+{
+	bool bResult;
+
+	bResult = CheckBiosWMI();
+
+	if(bResult)
+	{
+		printf("[*] TestCase9 - Detect VirtualBox - BiosVersionWMI =  [ YES ]\n");
+		bResult = true;
+	}
+	else
+	{
+		printf("[*] TestCase9 - Detect VirtualBox - BiosVersionWMI =  [ NO ]\n");
+		bResult = false;
+	}
+
+	return bResult;
+}
+/********** End = Virtual TestCase Func **********/
