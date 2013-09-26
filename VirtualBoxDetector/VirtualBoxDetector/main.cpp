@@ -17,6 +17,7 @@ int main()
 	cAntiVm.TestCase6();		// # 등록된 레지스터의 VBOX 문자열 비교 
 	cAntiVm.TestCase7();		// # NIC의 Mac Address 범위를 비교 탐지
 	cAntiVm.TestCase8();		// # Reg에 등록된 SMBios의 Type을 비교 탐지 
+	cAntiVm.TestCase9();		// # Bios Brand Version 비교 탐지 (WMI)
 	
 	printf("종료하려면 아무키나...anti vm evasion 우리 조 화이팅!!\n");
 	getch();

@@ -18,6 +18,13 @@ public:
 	char m_pszModel[SIZE_DRIVER_NAME];
 public:
 	CVboxAnti() {}
+		
+	/********** Start = Utils Func **********/
+	void AllToUpper(unsigned char* str,unsigned long len);
+	unsigned char* ScanDataForString(unsigned char* data,unsigned long data_length,unsigned char* string2);
+	/********** End = Utils func **********/
+
+	/********** Start = VirtualCheck Func **********/
 	PSTR GetFirstPhysicalDriveModelNames();
 	unsigned int GetIDT();
 	bool CheckLDT();
@@ -26,8 +33,11 @@ public:
 	bool QueryRegedit();
 	bool CheckNICMacInfo();
 	bool CheckRegSMBios();
+	bool CheckBiosWMI();
+	/********** End = VirtualCheck Func **********/
 
 
+	/********** Start = Virtual TestCase Func **********/
 	bool TestCase1();	// # 서명된 드라이버 문자열 탐지
 	bool TestCase2();	// # IDT 주소가 위치한 곳을 비교
 	bool TestCase3();	// # LDT 주소가 위치한 곳을 비교
@@ -36,6 +46,9 @@ public:
 	bool TestCase6();	// # 등록된 레지스터의 VBOX 문자열 비교 탐지
 	bool TestCase7();	// # NIC의 Mac Address 범위를 비교 탐지
 	bool TestCase8();	// # Reg에 등록된 SMBios의 Type을 비교 탐지 
+	bool TestCase9();	// # Bios Brand Version 비교 탐지 (WMI)
+
+	/********** End = Virtual TestCase Func **********/
 };
 
 #endif 
