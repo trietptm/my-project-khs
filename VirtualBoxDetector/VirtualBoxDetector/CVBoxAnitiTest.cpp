@@ -496,6 +496,9 @@ bool CVboxAnti::CheckBiosWMI()
 				
 				if(x1 || x2 || x3 || x4 || x5)
 				{
+					pSvc->Release();
+					pLoc->Release();    
+					CoUninitialize();
 					return true;
 					//printf("VirtualBox detected\r\n");
 					//printf("Some Strings found:\r\n");
@@ -513,9 +516,88 @@ bool CVboxAnti::CheckBiosWMI()
     pLoc->Release();    
     CoUninitialize();
 
+out:
 	return false;
 }
+#include <initguid.h>
+#include "DXDIAG\\INCLUDE\\dxdiag.h"
 
+bool CVboxAnti::CheckDXDiagSysInfo()
+{
+    HRESULT hr=CoInitialize(0);
+
+    if(!SUCCEEDED(hr)) 
+	{
+		printf("CoInitializeEx Error\n");
+		return false;
+	}
+	IDxDiagProvider* pProvider = NULL;
+    hr=CoCreateInstance(CLSID_DxDiagProvider,0,CLSCTX_INPROC_SERVER,IID_IDxDiagProvider,(void**)&pProvider );
+	
+	if(!SUCCEEDED(hr))
+     {
+        CoUninitialize();
+        return false;
+     }
+    DXDIAG_INIT_PARAMS InitParams={0};
+    InitParams.dwSize=sizeof(DXDIAG_INIT_PARAMS);
+    InitParams.dwDxDiagHeaderVersion=DXDIAG_DX9_SDK_VERSION;
+    InitParams.bAllowWHQLChecks=false;
+    hr=pProvider->Initialize(&InitParams);
+
+    if(SUCCEEDED(hr))
+        {
+          IDxDiagContainer* pDxDiagRoot=0;
+          IDxDiagContainer* pDxDiagSystemInfo=0;
+          hr=pProvider->GetRootContainer(&pDxDiagRoot );
+          if(SUCCEEDED(hr))
+          {
+                hr=pDxDiagRoot->GetChildContainer( L"DxDiag_SystemInfo", &pDxDiagSystemInfo );
+                if(SUCCEEDED(hr) )
+                {
+                       VARIANT varX;
+                                           hr=pDxDiagSystemInfo->GetProp( L"szSystemManufacturerEnglish",&varX);
+                       if( SUCCEEDED(hr)&&varX.vt==VT_BSTR && SysStringLen(varX.bstrVal)!=0)
+                       {
+                                                   wchar_t* pMan=varX.bstrVal;
+                           //wprintf(L"System Manufacturer is %s\r\n",pMan);
+                                                   if(!_wcsicmp(pMan,L"innotek GmbH"))
+                                                   {
+                                                           //printf("VirtualBox detected\r\n");
+															pDxDiagRoot->Release();
+															pProvider->Release();
+															CoUninitialize();
+															return true;
+                                                   }
+                                       }
+                       VariantClear(&varX);
+                                           hr=pDxDiagSystemInfo->GetProp( L"szSystemModelEnglish",&varX);
+                       if( SUCCEEDED(hr)&&varX.vt==VT_BSTR && SysStringLen(varX.bstrVal)!=0)
+                       {
+                                                   wchar_t* pMan=varX.bstrVal;
+                          // wprintf(L"System Model is %s\r\n",pMan);
+                                                   if(!_wcsicmp(pMan,L"VirtualBox"))
+                                                   {
+                                                          // printf("VirtualBox detected\r\n");
+														pDxDiagRoot->Release();
+														pProvider->Release();
+														CoUninitialize();
+													   return true;
+                                                   }
+                                       }
+                       VariantClear(&varX);
+                
+                }
+                
+        }
+       
+    }
+
+	//pDxDiagRoot->Release();
+	pProvider->Release();
+    CoUninitialize();
+    return false;
+}
 /********** End = VirtualCheck Func **********/
 
 
@@ -694,6 +776,26 @@ bool CVboxAnti::TestCase9()
 	else
 	{
 		printf("[*] TestCase9 - Detect VirtualBox - BiosVersionWMI =  [ NO ]\n");
+		bResult = false;
+	}
+
+	return bResult;
+}
+
+bool CVboxAnti::TestCase10()
+{
+	bool bResult;
+
+	bResult = CheckDXDiagSysInfo();
+
+	if(bResult)
+	{
+		printf("[*] TestCase10 - Detect VirtualBox - DXDiagSysInfo =  [ YES ]\n");
+		bResult = true;
+	}
+	else
+	{
+		printf("[*] TestCase10 - Detect VirtualBox - DXDiagSysInfo =  [ NO ]\n");
 		bResult = false;
 	}
 
