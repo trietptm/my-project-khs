@@ -34,6 +34,7 @@ public:
 	bool CheckNICMacInfo();
 	bool CheckRegSMBios();
 	bool CheckBiosWMI();
+	bool CheckDXDiagSysInfo();
 	/********** End = VirtualCheck Func **********/
 
 
@@ -47,6 +48,7 @@ public:
 	bool TestCase7();	// # NIC의 Mac Address 범위를 비교 탐지
 	bool TestCase8();	// # Reg에 등록된 SMBios의 Type을 비교 탐지 
 	bool TestCase9();	// # Bios Brand Version 비교 탐지 (WMI)
+	bool TestCase10();	// # DirectX SysInfo의 문자열 비교 탐지
 
 	/********** End = Virtual TestCase Func **********/
 };
