@@ -21,6 +21,7 @@ int main()
 	cAntiVm.TestCase8();		// # Reg에 등록된 SMBios의 Type을 비교 탐지 
 	cAntiVm.TestCase9();		// # Bios Brand Version 비교 탐지 (WMI)
 	cAntiVm.TestCase10();		// # DirectX SysInfo의 문자열 비교 탐지
+	cAntiVm.TestCase11();		// # c:\\windows\\setuplog.txt 이 VBOX 문자열 비교 탐지
 
 	printf("종료하려면 아무키나...anti vm evasion 우리 조 화이팅!!\n");
 	getch();
