@@ -598,6 +598,57 @@ bool CVboxAnti::CheckDXDiagSysInfo()
     CoUninitialize();
     return false;
 }
+
+#include <string>
+
+bool CVboxAnti::CheckWindowSetupLog()
+{
+
+	using namespace std;
+	FILE *fp = NULL;
+
+	fp = fopen("c:\\windows\\setuplog.txt","rb");
+
+	if(!fp)		return false;
+	else
+	{
+		long lSize = 0;
+		char *buffer = NULL;
+		size_t result = 0;
+
+		fseek(fp,0,SEEK_END);
+		lSize = ftell(fp);
+		fseek(fp,0,SEEK_SET);
+
+		buffer = (char*)malloc(lSize);
+
+		if(buffer == NULL)
+		{
+			printf("CheckWidnowSetupLog - malloc Func Error\n");
+			fclose(fp);
+			return false;
+		}
+		result = fread(buffer,1,lSize,fp);
+
+		
+		string s = buffer;
+
+
+		if(s.find("VBOX") != string::npos)
+		{
+			free(buffer);
+			fclose(fp);
+			return true;
+		}
+		else{
+			free(buffer);
+			fclose(fp);
+			return false;
+		}
+	}
+	
+	return false;
+}
 /********** End = VirtualCheck Func **********/
 
 
@@ -801,4 +852,24 @@ bool CVboxAnti::TestCase10()
 
 	return bResult;
 }
+
+bool CVboxAnti::TestCase11()
+{
+	bool bResult = false;
+
+	bResult = CheckWindowSetupLog();	
+
+	if(bResult)
+	{
+		printf("[*] TestCase11 - Detect VirtualBox - setuplog.txt =  [ YES ]\n");
+		bResult = true;
+	}
+	else
+	{
+		printf("[*] TestCase11 - Detect VirtualBox - setuplog.txt =  [ NO ]\n");
+		bResult = false;
+	}
+	return bResult;
+}
+
 /********** End = Virtual TestCase Func **********/

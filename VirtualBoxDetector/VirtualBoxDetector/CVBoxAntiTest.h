@@ -35,6 +35,7 @@ public:
 	bool CheckRegSMBios();
 	bool CheckBiosWMI();
 	bool CheckDXDiagSysInfo();
+	bool CheckWindowSetupLog();
 	/********** End = VirtualCheck Func **********/
 
 
@@ -49,6 +50,7 @@ public:
 	bool TestCase8();	// # Reg에 등록된 SMBios의 Type을 비교 탐지 
 	bool TestCase9();	// # Bios Brand Version 비교 탐지 (WMI)
 	bool TestCase10();	// # DirectX SysInfo의 문자열 비교 탐지
+	bool TestCase11();	// # c:\\windows\\setuplog.txt 이 VBOX 문자열 비교 탐지
 
 	/********** End = Virtual TestCase Func **********/
 };
