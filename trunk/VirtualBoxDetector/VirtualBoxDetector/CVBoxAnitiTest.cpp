@@ -156,12 +156,14 @@ unsigned int CVboxAnti::GetIDT()
 	return retval;
 }
 
-bool CVboxAnti::CheckLDT()
+bool CVboxAnti::CheckLDT(unsigned int *a_pLdtBase)
 {
 	unsigned char m[4];
 
 	__asm
 		sldt m;	
+
+	memcpy(a_pLdtBase,m,4);
 
 	if(m[0] == 0x00 && m[1] == 0x00)
 		return false;
@@ -194,12 +196,14 @@ unsigned long CVboxAnti::CheckRDTSC()
 }
 
 
-bool CVboxAnti::CheckTss()
+bool CVboxAnti::CheckTss(unsigned int *pAddrTss)
 {
 	unsigned char mem[4] = {0,0,0,0};
 
 	__asm
 		str mem;
+
+	memcpy(pAddrTss,mem,4);
 
 	if((mem[0] == 0x40) && (mem[1] == 0x00))
 		return false;
@@ -692,12 +696,16 @@ bool CVboxAnti::TestCase2()
 		bResult = false;
 	}
 
+	printf("= Now IDTBase : 0x%08x\n",iAddrIDT);
+	printf("= IDTBase > 0x0d000000? Guest:Host\n");
+
 	return bResult;
 }
 
 bool CVboxAnti::TestCase3()
 {
-	bool bResult = CheckLDT();
+	unsigned int iAddrLDT = 0;
+	bool bResult = CheckLDT(&iAddrLDT);
 
 	if(bResult)
 	{
@@ -709,6 +717,10 @@ bool CVboxAnti::TestCase3()
 		printf("[*] TestCase3 - Detect VirtualBox - LDTAddress =  [ NO ]\n");
 		bResult = false;
 	}
+
+	printf("= Now LDTBase : 0x%08x\n",iAddrLDT);
+	printf("= LDTBase != 0xcccc0000? Guest:Host\n");
+
 	return bResult;
 }
 
@@ -730,14 +742,18 @@ bool CVboxAnti::TestCase4()
 		bResult = false;
 	}
 
+	printf("= RDTSC : %d\n",ctime);
+	printf("= RDTSC > 512? Guest:Host\n");
+
 	return bResult;
 }
 
 bool CVboxAnti::TestCase5()
 {
 	bool bResult;
+	unsigned int iAddrTss = 0;
 
-	bResult = CheckTss();
+	bResult = CheckTss(&iAddrTss);
 
 	if(bResult)
 	{
@@ -749,6 +765,9 @@ bool CVboxAnti::TestCase5()
 		printf("[*] TestCase5 - Detect VirtualBox - TSSAddress =  [ NO ]\n");
 		bResult = false;
 	}
+
+	printf("= Now TSSAddress : 0x%08x\n",iAddrTss);
+	printf("= TSS != 0x00000040 Guest:Host\n");
 
 	return bResult;
 }
