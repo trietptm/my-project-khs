@@ -27,9 +27,9 @@ public:
 	/********** Start = VirtualCheck Func **********/
 	PSTR GetFirstPhysicalDriveModelNames();
 	unsigned int GetIDT();
-	bool CheckLDT();
+	bool CheckLDT(unsigned int *a_pLdtBase);
 	unsigned long CheckRDTSC();
-	bool CheckTss();
+	bool CheckTss(unsigned int *pAddrTss);
 	bool QueryRegedit();
 	bool CheckNICMacInfo();
 	bool CheckRegSMBios();
