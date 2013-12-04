@@ -1,10 +1,11 @@
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <ws2tcpip.h>
-
+#include <string>
 #include "CVBoxAntiTest.h"
 #include "VBoxTestDefine.h"
 #include <stdio.h>
+#include <iostream>
 //
 
 /********** Start = Utils Func **********/
@@ -528,6 +529,7 @@ out:
 
 bool CVboxAnti::CheckDXDiagSysInfo()
 {
+	using namespace std;
     HRESULT hr=CoInitialize(0);
 
     if(!SUCCEEDED(hr)) 
@@ -564,7 +566,11 @@ bool CVboxAnti::CheckDXDiagSysInfo()
                        if( SUCCEEDED(hr)&&varX.vt==VT_BSTR && SysStringLen(varX.bstrVal)!=0)
                        {
                                                    wchar_t* pMan=varX.bstrVal;
-                           //wprintf(L"System Manufacturer is %s\r\n",pMan);
+													//string s = pMan;
+													wprintf(L"= Now DxDiagInfo : %s\n",pMan);
+													printf("DxDiagInfo == innotek GmbH? Guest:Host\n");
+													
+													//wprintf(L"System Manufacturer is %s\r\n",pMan);
                                                    if(!_wcsicmp(pMan,L"innotek GmbH"))
                                                    {
                                                            //printf("VirtualBox detected\r\n");
@@ -579,6 +585,8 @@ bool CVboxAnti::CheckDXDiagSysInfo()
                        if( SUCCEEDED(hr)&&varX.vt==VT_BSTR && SysStringLen(varX.bstrVal)!=0)
                        {
                                                    wchar_t* pMan=varX.bstrVal;
+												   wprintf(L"= Now DxDiagInfo : %s\n",pMan);
+												   printf("DxDiagInfo == VirtualBox? Guest:Host\n");
                           // wprintf(L"System Model is %s\r\n",pMan);
                                                    if(!_wcsicmp(pMan,L"VirtualBox"))
                                                    {
@@ -653,6 +661,62 @@ bool CVboxAnti::CheckWindowSetupLog()
 	
 	return false;
 }
+
+int filter(unsigned int code, struct _EXCEPTION_POINTERS *ep)
+{
+        //_tprintf(_T("%s code=0x%08x\n"), __FUNCTIONW__, code);
+        if (EXCEPTION_SINGLE_STEP == code)
+        {
+                return EXCEPTION_EXECUTE_HANDLER;              
+        }
+ 
+        return EXCEPTION_CONTINUE_SEARCH;
+}
+#pragma optimize("gst", off)
+bool check_virtualpc_cpuid_trick()
+{
+        unsigned long value = 0;
+
+        __try
+        {
+                __asm
+                {
+                        pushad
+                        xor eax, eax
+                        xor ebx, ebx
+                        xor ecx, ecx
+                        xor edx, edx
+ 
+                        pushfd
+                        pop esi
+                        or esi, 0x100                   // trap flag
+                        push esi
+                        popfd
+                        cpuid
+ 
+                        pushfd
+                        pop eax
+                        mov value, eax
+                        popad  
+                }
+        }
+        __except(filter(GetExceptionCode(), GetExceptionInformation()))
+        {
+                //printf("exception");
+        }
+       
+        if (0 != (value & 0x100))
+        {
+                return true;
+        }
+        else
+        {
+                return false;
+        }
+}
+#pragma optimize("", on) // restore compiler settings
+
+
 /********** End = VirtualCheck Func **********/
 
 
@@ -675,6 +739,8 @@ bool CVboxAnti::TestCase1()
 		bResult = false;
 	}
 
+	std::string s = m_pszModel;
+	printf("= DriverName : %s\n",s.c_str());
 	return bResult;
 }
 
@@ -890,5 +956,82 @@ bool CVboxAnti::TestCase11()
 	}
 	return bResult;
 }
+
+
+// # CPUID eax=1 ecx[31bit] 1ºñ±³ Å½Áö
+bool CVboxAnti::TestCase12()
+{
+		unsigned int u32Ecx = 0;
+		unsigned int u32Edx = 0;
+		__asm
+		{
+			xor eax, eax
+			inc eax
+			cpuid
+			mov u32Ecx, ecx
+			mov u32Edx, edx
+		}
+
+		if( u32Ecx & 0x80000000 )
+		{
+			printf("[*] TestCase11 - Detect VirtualBox - cpuid.1 ecx[31bit] =  [ YES ]\n");
+			return true;
+		}
+		else
+		{
+			printf("[*] TestCase11 - Detect VirtualBox - cpuid.1 ecx[31bit] =  [ NO ]\n");
+			return false;
+		}
+	
+}
+
+// # CPUID eax=1 edx[28bit] 1ºñ±³ Å½Áö
+bool CVboxAnti::TestCase13()
+{
+
+	unsigned int iEdx = 0;
+
+	unsigned int Value = 0;
+
+	__asm
+	{
+		xor eax, eax
+		inc eax
+		cpuid
+		mov iEdx, edx
+	}
+
+	if( !(0x10000000 & iEdx) )
+	{
+		printf("[*] TestCase13 - Detect VirtualBox - cpuid.1 edx[28bit] =  [ YES ]\n");
+		return true;
+	}
+	else
+	{
+		printf("[*] TestCase13 - Detect VirtualBox - cpuid.1 edx[28bit] =  [ NO ]\n");
+		return false;
+	}
+
+}
+
+// # Single step Flags on cpuid tf bit
+bool CVboxAnti::TestCase14()
+{
+	bool bReuslt = check_virtualpc_cpuid_trick();
+
+	if(bReuslt)
+	{
+		printf("[*] TestCase14 - Detect VirtualBox - Single step Flags on cpuid tf bit =  [ YES ]\n");
+		return true;
+	}
+	else
+	{
+		printf("[*] TestCase14 - Detect VirtualBox - Single step Flags on cpuid tf bit =  [ NO ]\n");
+		return false;
+	}
+
+	
+}
+
 
 /********** End = Virtual TestCase Func **********/
