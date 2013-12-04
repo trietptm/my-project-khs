@@ -51,6 +51,10 @@ public:
 	bool TestCase9();	// # Bios Brand Version 비교 탐지 (WMI)
 	bool TestCase10();	// # DirectX SysInfo의 문자열 비교 탐지
 	bool TestCase11();	// # c:\\windows\\setuplog.txt 이 VBOX 문자열 비교 탐지
+	bool TestCase12();  // # CPUID eax=1 ecx[31bit] 1비교 탐지
+	bool TestCase13();	// # CPUID eax=1 edx[28bit] 1비교 탐지
+	bool TestCase14();  // # Single step Flags on cpuid tf bit
+
 
 	/********** End = Virtual TestCase Func **********/
 };
