@@ -957,7 +957,6 @@ bool CVboxAnti::TestCase11()
 	return bResult;
 }
 
-
 // # CPUID eax=1 ecx[31bit] 1ºñ±³ Å½Áö
 bool CVboxAnti::TestCase12()
 {
@@ -974,12 +973,12 @@ bool CVboxAnti::TestCase12()
 
 		if( u32Ecx & 0x80000000 )
 		{
-			printf("[*] TestCase11 - Detect VirtualBox - cpuid.1 ecx[31bit] =  [ YES ]\n");
+			printf("[*] TestCase12 - Detect VirtualBox - cpuid.1 ecx[31bit] =  [ YES ]\n");
 			return true;
 		}
 		else
 		{
-			printf("[*] TestCase11 - Detect VirtualBox - cpuid.1 ecx[31bit] =  [ NO ]\n");
+			printf("[*] TestCase12 - Detect VirtualBox - cpuid.1 ecx[31bit] =  [ NO ]\n");
 			return false;
 		}
 	
